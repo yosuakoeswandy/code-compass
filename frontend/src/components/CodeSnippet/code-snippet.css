@@ -1,0 +1,66 @@
+.code-snippet-container {
+  background: #15181C;
+  border: 1px solid #282A36;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.code-snippet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid #282A36;
+  background: #181B21;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.code-snippet-header:hover,
+.code-snippet-header:focus {
+  background: #20242B;
+}
+
+.code-snippet-filename {
+  color: #F5F6FA;
+  font-family: Menlo, Monaco, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.code-snippet-caret {
+  display: inline-block;
+  transition: transform 0.1s;
+  color: #B4B8C5;
+  font-size: 19px;
+  line-height: 1;
+  transform: rotate(0deg);
+}
+.code-snippet-caret.expanded {
+  transform: rotate(180deg);
+}
+
+/* Code area */
+.code-snippet-code {
+  margin: 0;
+  background: none !important;
+  border: none;
+  padding: 22px 18px !important;
+  font-family: Menlo, Monaco, 'Fira Mono', monospace !important;
+  font-size: 13px !important;
+  overflow-x: auto;
+  line-height: 1.7 !important;
+}
+
+/* Optional: override line numbers color for SyntaxHighlighter */
+.code-snippet-code .react-syntax-highlighter-line-number {
+  color: #7D8593 !important;
+  min-width: 42px !important;
+  user-select: none;
+  text-align: right;
+  padding-right: 18px !important;
+  font-size: 13px !important;
+  opacity: 0.75;
+  flex-shrink: 0;
+}

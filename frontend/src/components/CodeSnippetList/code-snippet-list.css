@@ -1,0 +1,7 @@
+.code-snippet-list-container {
+  width: 80%;
+  margin: 24px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
