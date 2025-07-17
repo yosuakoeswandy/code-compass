@@ -52,7 +52,7 @@ def init_collection_impl(collection_name: str, path: str):
     vector_store = _get_or_create_store(collection_name)
 
     transformations = [
-        CustomCodeSplitter(language="csharp"),
+        CustomCodeSplitter(),
     ]
 
     storage_context = StorageContext.from_defaults(vector_store=vector_store)

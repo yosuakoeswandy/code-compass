@@ -3,7 +3,7 @@ from bisect import bisect_right
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional, Sequence
 
-from llama_index.core.bridge.pydantic import Field, PrivateAttr
+from llama_index.core.bridge.pydantic import Field
 from llama_index.core.callbacks.base import CallbackManager
 from llama_index.core.callbacks.schema import CBEventType, EventPayload
 from llama_index.core.node_parser.interface import NodeParser
@@ -14,6 +14,9 @@ from llama_index.core.node_parser.node_utils import (
 from llama_index.core.schema import Document, BaseNode
 from llama_index.core.utils import get_tqdm_iterable
 from tree_sitter import Node
+import tree_sitter_language_pack
+
+from utils import get_language_from_filename
 
 
 DEFAULT_MAX_CHARS = 500
@@ -91,9 +94,6 @@ class CustomCodeSplitter(NodeParser):
     Custom Code Splitter
     """
 
-    language: str = Field(
-        description="The programming language of the code being split."
-    )
     max_chars: int = Field(
         default=DEFAULT_MAX_CHARS,
         description="Maximum number of characters per chunk.",
@@ -104,27 +104,22 @@ class CustomCodeSplitter(NodeParser):
         description="Minimum number of lines per chunk.",
         gt=0,
     )
-    _parser: Any = PrivateAttr()
 
     def __init__(
         self,
-        language: str,
         max_chars: int = DEFAULT_MAX_CHARS,
         min_lines: int = DEFAULT_MIN_LINES,
-        parser: Any = None,
         callback_manager: Optional[CallbackManager] = None,
         include_metadata: bool = True,
         include_prev_next_rel: bool = True,
         id_func: Optional[Callable[[int, Document], str]] = None,
     ) -> None:
         """Initialize a CodeSplitter."""
-        from tree_sitter import Parser  # pants: no-infer-dep
 
         callback_manager = callback_manager or CallbackManager([])
         id_func = id_func or default_id_func
 
         super().__init__(
-            language=language,
             max_chars=max_chars,
             min_lines=min_lines,
             callback_manager=callback_manager,
@@ -133,31 +128,26 @@ class CustomCodeSplitter(NodeParser):
             id_func=id_func,
         )
 
-        if parser is None:
-            try:
-                import tree_sitter_language_pack  # pants: no-infer-dep
-
-                parser = tree_sitter_language_pack.get_parser(language)  # type: ignore
-            except ImportError:
-                raise ImportError(
-                    "Please install tree_sitter_language_pack to use CodeSplitter."
-                    "Or pass in a parser object."
-                )
-            except Exception:
-                print(
-                    f"Could not get parser for language {language}. Check "
-                    "https://github.com/Goldziher/tree-sitter-language-pack?tab=readme-ov-file#available-languages "
-                    "for a list of valid languages."
-                )
-                raise
-        if not isinstance(parser, Parser):
-            raise ValueError("Parser must be a tree-sitter Parser object.")
-
-        self._parser = parser
-
     @classmethod
     def class_name(cls) -> str:
         return "CustomCodeSplitter"
+
+    def _get_parser(self, language: str):
+        try:
+            parser = tree_sitter_language_pack.get_parser(language)
+            return parser
+        except ImportError:
+            raise ImportError(
+                "Please install tree_sitter_language_pack to use CodeSplitter."
+                "Or pass in a parser object."
+            )
+        except Exception:
+            print(
+                f"Could not get parser for language {language}. Check "
+                "https://github.com/Goldziher/tree-sitter-language-pack?tab=readme-ov-file#available-languages "
+                "for a list of valid languages."
+            )
+            raise
 
     def _connect_chunks(self, chunks: List[ChunkRange], end_byte: int):
         """Modify chunks in-place to fill the gaps between each chunk"""
@@ -242,12 +232,17 @@ class CustomCodeSplitter(NodeParser):
         nodes_with_progress = get_tqdm_iterable(nodes, show_progress, "Parsing nodes")
         for node in nodes_with_progress:
             code = node.get_content()
+            language = get_language_from_filename(node.metadata["file_name"])
+
+            # Not a code file or language is not supported
+            if not language:
+                continue
 
             with self.callback_manager.event(
                 CBEventType.CHUNKING, payload={EventPayload.CHUNKS: [code]}
             ) as event:
                 text_bytes = bytes(code, "utf-8")
-                tree = self._parser.parse(text_bytes)
+                tree = self._get_parser(language).parse(text_bytes)
                 source_index = SourceIndex(code)
 
                 if (
@@ -273,8 +268,6 @@ class CustomCodeSplitter(NodeParser):
 
                     all_nodes.extend(nodes)
                 else:
-                    raise ValueError(
-                        f"Could not parse code with language {self.language}."
-                    )
+                    raise ValueError(f"Could not parse code with language {language}.")
 
         return all_nodes
