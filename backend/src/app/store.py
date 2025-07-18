@@ -1,5 +1,6 @@
 import os
 import re
+from dotenv import load_dotenv
 from pymilvus import connections, utility
 from typing import List, Optional
 from llama_index.vector_stores.milvus import MilvusVectorStore
@@ -11,13 +12,14 @@ from custom_splitter import CustomCodeSplitter
 from llama_index.core.ingestion import IngestionPipeline
 
 
-MILVUS_HOST = "localhost"
-MILVUS_PORT = "19530"
+load_dotenv()
+MILVUS_URI = os.getenv("MILVUS_URI")
+MILVUS_TOKEN = os.getenv("MILVUS_TOKEN")
 
 
 def _get_or_create_store(collection_name: str) -> MilvusVectorStore:
     return MilvusVectorStore(
-        uri=f"http://{MILVUS_HOST}:{MILVUS_PORT}",
+        uri=MILVUS_URI, token=MILVUS_TOKEN,
         collection_name=collection_name,
         enable_dense=True,
         dim=1536,
@@ -27,7 +29,7 @@ def _get_or_create_store(collection_name: str) -> MilvusVectorStore:
 
 
 def create_collections_impl(collection_name: str):
-    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+    connections.connect(uri=MILVUS_URI, token=MILVUS_TOKEN)
 
     if utility.has_collection(collection_name):
         raise ValueError(f"Collection '{collection_name}' already exists.")
@@ -36,7 +38,7 @@ def create_collections_impl(collection_name: str):
 
 
 def delete_collection_impl(collection_name: str):
-    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+    connections.connect(uri=MILVUS_URI, token=MILVUS_TOKEN)
 
     if not utility.has_collection(collection_name):
         raise ValueError(f"Collection '{collection_name}' does not exist.")
@@ -45,7 +47,7 @@ def delete_collection_impl(collection_name: str):
 
 
 async def init_collection_impl(collection_name: str, path: str):
-    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+    connections.connect(uri=MILVUS_URI, token=MILVUS_TOKEN)
 
     if not utility.has_collection(collection_name):
         raise ValueError(f"Collection '{collection_name}' does not exist.")
@@ -69,7 +71,7 @@ async def init_collection_impl(collection_name: str, path: str):
 
 
 def try_connection():
-    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT, _async=True)
+    connections.connect(uri=MILVUS_URI, token=MILVUS_TOKEN, _async=True)
 
     print("Success")
 
@@ -77,7 +79,7 @@ def try_connection():
 def search_collection_impl(
     collection_name: str, query: str, query_type: Optional[str]
 ) -> List[SearchChunkResponse]:
-    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+    connections.connect(uri=MILVUS_URI, token=MILVUS_TOKEN)
 
     if not utility.has_collection(collection_name):
         raise ValueError(f"Collection '{collection_name}' does not exist.")
