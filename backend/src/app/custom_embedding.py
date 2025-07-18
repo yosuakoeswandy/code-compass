@@ -2,7 +2,7 @@ from typing import Any, List
 
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.llms.azure_openai import AzureOpenAI
-from openai import OpenAI
+from openai import AsyncOpenAI, OpenAI
 from pydantic import Field
 
 
@@ -93,7 +93,7 @@ class CustomAzureOpenAICodeEmbedding(AzureOpenAIEmbedding):
         return summary
 
     async def _aget_embedding(
-        self, aclient: OpenAI, text: str, engine: str, **kwargs: Any
+        self, aclient: AsyncOpenAI, text: str, engine: str, **kwargs: Any
     ) -> List[float]:
         """Asynchronously get embedding from a description + code chunk."""
         text = text.replace("\n", " ")
@@ -108,7 +108,7 @@ class CustomAzureOpenAICodeEmbedding(AzureOpenAIEmbedding):
         return response.data[0].embedding
 
     async def _aget_embeddings(
-        self, aclient: OpenAI, list_of_text: List[str], engine: str, **kwargs: Any
+        self, aclient: AsyncOpenAI, list_of_text: List[str], engine: str, **kwargs: Any
     ) -> List[List[float]]:
         """Get embeddings from a list of descriptions + code chunks."""
         assert len(list_of_text) <= 2048, (
@@ -123,7 +123,7 @@ class CustomAzureOpenAICodeEmbedding(AzureOpenAIEmbedding):
             combined = f"{description}\n{text}"
             processed_texts.append(combined)
 
-        response = aclient.embeddings.create(
+        response = await aclient.embeddings.create(
             input=processed_texts, model=engine, **kwargs
         )
         return [item.embedding for item in response.data]

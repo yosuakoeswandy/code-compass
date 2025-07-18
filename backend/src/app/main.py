@@ -12,14 +12,42 @@ from store import (
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi import Body
+from fastapi import Body, status
 from typing import List
+
+import asyncio
+import uuid
+
+job_queue = None
+job_status = {}
+worker_task = None
+
+
+async def async_worker():
+    while True:
+        job = await job_queue.get()
+        if job is None:
+            break
+        job_id, collection_name, path = job
+        job_status[job_id] = "running"
+        try:
+            num_docs = await init_collection_impl(collection_name, path)
+            job_status[job_id] = f"done ({num_docs} chunks)"
+        except Exception as e:
+            job_status[job_id] = f"error: {e}"
+        finally:
+            job_queue.task_done()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global job_queue, worker_task
+    job_queue = asyncio.Queue()
     setup_llama_index()
+    worker_task = asyncio.create_task(async_worker())
     yield
+    await job_queue.put(None)  # Signal to exit worker
+    await worker_task
 
 
 app = FastAPI(lifespan=lifespan)
@@ -65,17 +93,17 @@ async def delete_collection(collection_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/collections/{collection_name}/init")
+@app.post("/collections/{collection_name}/init", status_code=status.HTTP_202_ACCEPTED)
 async def init_collection(collection_name: str, path: str = Body(..., embed=True)):
-    try:
-        num_docs = init_collection_impl(collection_name, path)
-        return {
-            "message": f"Successfully populated '{collection_name}' with {num_docs} document(s)."
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    job_id = str(uuid.uuid4())
+    job_status[job_id] = "pending"
+    await job_queue.put((job_id, collection_name, path))
+    return {"message": f"Job to populate '{collection_name}' queued.", "job_id": job_id}
+
+
+@app.get("/collections/init/status/{job_id}")
+def get_status(job_id: str):
+    return {"status": job_status.get(job_id, "unknown")}
 
 
 @app.post(

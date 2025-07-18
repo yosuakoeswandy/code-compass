@@ -1,10 +1,12 @@
 from pymilvus import connections, utility
 from typing import List, Optional
 from llama_index.vector_stores.milvus import MilvusVectorStore
+from llama_index.core import Settings
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext
 from llama_index.core.postprocessor import LLMRerank
 from models import SearchChunkResponse
 from custom_splitter import CustomCodeSplitter
+from llama_index.core.ingestion import IngestionPipeline
 
 
 MILVUS_HOST = "localhost"
@@ -40,30 +42,34 @@ def delete_collection_impl(collection_name: str):
     utility.drop_collection(collection_name)
 
 
-def init_collection_impl(collection_name: str, path: str):
+async def init_collection_impl(collection_name: str, path: str):
     connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
 
     if not utility.has_collection(collection_name):
         raise ValueError(f"Collection '{collection_name}' does not exist.")
 
     # TODO: Sanitize input
-    documents = SimpleDirectoryReader(path).load_data()
+    documents = SimpleDirectoryReader(input_dir=path, recursive=True).load_data()
 
     vector_store = _get_or_create_store(collection_name)
 
-    transformations = [
-        CustomCodeSplitter(),
-    ]
+    pipeline = IngestionPipeline(
+        transformations=[CustomCodeSplitter(), Settings.embed_model],
+        vector_store=vector_store,
+    )
+    nodes = await pipeline.arun(documents=documents)
+    await vector_store.async_add(nodes)
 
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    VectorStoreIndex.from_documents(
-        documents=documents,
-        storage_context=storage_context,
-        vector_store=vector_store,
-        transformations=transformations,
-    )
+    VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context)
 
-    return len(documents)
+    return len(nodes)
+
+
+def try_connection():
+    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT, _async=True)
+
+    print("Success")
 
 
 def search_collection_impl(
