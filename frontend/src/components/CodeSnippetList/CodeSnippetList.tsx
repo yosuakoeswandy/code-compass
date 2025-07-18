@@ -3,7 +3,7 @@ import './code-snippet-list.css';
 
 type Snippet = {
   id: string;
-  fileName: string;
+  filePath: string;
   code: string;
   lineStart?: number;
 };
@@ -14,7 +14,7 @@ export default function CodeSnippetList({ snippets }: { snippets: Snippet[] }) {
       {snippets.map((snippet) => (
         <CodeSnippet
           key={snippet.id}
-          fileName={snippet.fileName}
+          filePath={snippet.filePath}
           code={snippet.code}
           lineStart={snippet.lineStart}
         />

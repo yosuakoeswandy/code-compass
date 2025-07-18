@@ -7,11 +7,11 @@ import './code-snippet.css';
 
 export default function CodeSnippet({
   code,
-  fileName,
+  filePath,
   lineStart = 1,
 }: {
   code: string;
-  fileName: string;
+  filePath: string;
   lineStart?: number;
 }) {
   const [expanded, setExpanded] = useState(true);
@@ -25,7 +25,7 @@ export default function CodeSnippet({
         title={expanded ? 'Collapse' : 'Expand'}
       >
         {/* File name */}
-        <span className='code-snippet-filename'>{fileName}</span>
+        <span className='code-snippet-filepath'>{filePath}</span>
         {/* Arrow icon */}
         <FontAwesomeIcon
           icon={faCaretDown}
@@ -35,7 +35,7 @@ export default function CodeSnippet({
       {/* Code */}
       {expanded && (
         <SyntaxHighlighter
-          language={fileName.split('.').pop() || 'text'}
+          language={filePath.split('.').pop() || 'text'}
           style={dark}
           customStyle={{}}
           showLineNumbers

@@ -23,13 +23,13 @@ export default function Search() {
   const [snippets, setSnippets] = useState<SearchResponse[]>([]);
 
   const baseUrl = import.meta.env.VITE_API_URL;
-  const collection_name = 'code_compass';
+  const collection_name = 'full_stack_fastapi_template';
 
   const onSearch = async (query: string) => {
     try {
       setLoading(true);
       const response = await axios.post<SearchResponse[]>(
-        `${baseUrl}/collections/${collection_name}/search`,
+        `${baseUrl}/collections/${encodeURIComponent(collection_name)}/search`,
         {
           query: query,
           queryType: 'hybrid',
@@ -53,7 +53,7 @@ export default function Search() {
           snippets={snippets.map((snippet) => ({
             id: snippet.id,
             code: snippet.content,
-            fileName: snippet.fileName,
+            filePath: snippet.filePath,
             lineStart: snippet.lineStart,
           }))}
         />

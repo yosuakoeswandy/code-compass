@@ -1,3 +1,5 @@
+import os
+import re
 from pymilvus import connections, utility
 from typing import List, Optional
 from llama_index.vector_stores.milvus import MilvusVectorStore
@@ -94,7 +96,9 @@ def search_collection_impl(
     return [
         SearchChunkResponse(
             id=node_with_score.node.id_,
-            filePath=node_with_score.node.metadata.get("file_path", ""),
+            filePath=_get_relative_file_path(
+                collection_name, node_with_score.node.metadata.get("file_path", "")
+            ),
             fileName=node_with_score.node.metadata.get("file_name", ""),
             content=node_with_score.node.text,
             lineStart=node_with_score.node.metadata.get("line_start", 0),
@@ -103,3 +107,23 @@ def search_collection_impl(
         )
         for node_with_score in reranked_nodes
     ]
+
+
+def _get_relative_file_path(collection_name: str, file_path: str) -> str:
+    # Replace whitespace and hyphen with underscore in both strings
+    def normalize(s):
+        return re.sub(r"[\s\-]+", "_", s)
+
+    # Split the file path into parts and normalize each part
+    parts = file_path.strip(os.sep).split(os.sep)
+    norm_parts = [normalize(part) for part in parts]
+
+    # Find the index of the collection_name in the normalized parts
+    try:
+        idx = norm_parts.index(collection_name)
+        # Join the path after collection_name
+        rel_parts = parts[idx + 1 :]
+        return os.path.join(*rel_parts)
+    except ValueError:
+        # If not found, return the original file_path
+        return file_path
