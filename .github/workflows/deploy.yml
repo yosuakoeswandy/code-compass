@@ -34,8 +34,8 @@ jobs:
         with:
           name: python-backend
           path: |
-            ../backend/*
-            !../backend/venv/
+            ./backend
+            ./backend/!venv/
 
   deploy:
     name: Deploy Python Backend to Azure App Service
