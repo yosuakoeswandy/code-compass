@@ -56,10 +56,22 @@ jobs:
           name: python-backend
           path: .
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+      - name: Deploy to Azure Web App (with Oryx Build)
+        id: deploy
+        uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
+          enable-oryx-build: true    # 👈 This triggers pip install on Azure
+
+      - name: Ensure App Service runs Oryx build
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-settings-json: |
+            {
+              "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+              "STARTUP_COMMAND": "gunicorn -k uvicorn.workers.UvicornWorker src.app.main:app"
+            }
