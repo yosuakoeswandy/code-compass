@@ -12,9 +12,6 @@ jobs:
   build:
     name: Build Python Backend
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
@@ -24,27 +21,32 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Sync dependencies
-        run: uv sync
+      - name: Export dependencies for Azure
+        working-directory: backend
+        run: |
+          # Compile all project dependencies into requirements.txt
+          uv pip compile --output-file=requirements.txt
+          cat requirements.txt
+
+      - name: Create deployment package
+        run: |
+          mkdir -p build_artifact
+          cp -R backend/* build_artifact/
 
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
-      - name: Upload artifact for deployment jobs
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: python-backend
-          path: |
-            ./backend
-            ./backend/!venv/
+          path: build_artifact
 
   deploy:
     name: Deploy Python Backend to Azure App Service
-    permissions:
-      contents: none
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'Development'
+      name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -52,7 +54,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-backend
-          path: backend-artifact
+          path: .
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -60,4 +62,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: backend-artifact
+          package: .
