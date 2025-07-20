@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from llama_index.core import Settings
 from llama_index.llms.azure_openai import AzureOpenAI
 
-from custom_embedding import CustomAzureOpenAICodeEmbedding
+from src.app.custom_embedding import CustomAzureOpenAICodeEmbedding
 
 
 def setup_llama_index():

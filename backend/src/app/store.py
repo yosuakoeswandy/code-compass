@@ -7,8 +7,8 @@ from llama_index.vector_stores.milvus import MilvusVectorStore
 from llama_index.core import Settings
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext
 from llama_index.core.postprocessor import LLMRerank
-from models import SearchChunkResponse
-from custom_splitter import CustomCodeSplitter
+from src.app.models import SearchChunkResponse
+from src.app.custom_splitter import CustomCodeSplitter
 from llama_index.core.ingestion import IngestionPipeline
 
 

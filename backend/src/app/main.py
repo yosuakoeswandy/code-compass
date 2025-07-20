@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
 import uvicorn
-from models import SearchChunkResponse, SearchQuery
-from setup import setup_llama_index
-from store import (
+from src.app.models import SearchChunkResponse, SearchQuery
+from src.app.setup import setup_llama_index
+from src.app.store import (
     create_collections_impl,
     delete_collection_impl,
     init_collection_impl,

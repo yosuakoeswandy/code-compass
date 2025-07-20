@@ -16,7 +16,7 @@ from llama_index.core.utils import get_tqdm_iterable
 from tree_sitter import Node
 import tree_sitter_language_pack
 
-from utils import get_language_from_filename
+from src.app.utils import get_language_from_filename
 
 
 DEFAULT_MAX_CHARS = 500
