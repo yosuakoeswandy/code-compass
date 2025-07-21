@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import os
+from dotenv import load_dotenv
 import uvicorn
 from src.app.models import SearchChunkResponse, SearchQuery
 from src.app.setup import setup_llama_index
@@ -50,12 +52,10 @@ async def lifespan(app: FastAPI):
     await worker_task
 
 
+load_dotenv()
 app = FastAPI(lifespan=lifespan)
 
-origins = [
-    "codesearch-vscode-extension",
-    "http://localhost:5173",
-]
+origins = ["http://localhost:5173", os.getenv("CLIENT_URI")]
 
 app.add_middleware(
     CORSMiddleware,
