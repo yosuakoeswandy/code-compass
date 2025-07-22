@@ -3,8 +3,8 @@ name: Deploy web app to Azure Static Web Apps
 on:
   push:
     branches: [ "main" ]
-    # paths:
-    #   - frontend/**
+    paths:
+      - frontend/**
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [ "main" ]
