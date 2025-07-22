@@ -71,39 +71,39 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.post("/collections/{collection_name}")
-async def create_collection(collection_name: str):
-    try:
-        create_collections_impl(collection_name)
-        return {"message": f"Collection '{collection_name}' created successfully."}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/collections/{collection_name}")
+# async def create_collection(collection_name: str):
+#     try:
+#         create_collections_impl(collection_name)
+#         return {"message": f"Collection '{collection_name}' created successfully."}
+#     except ValueError as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/collections/{collection_name}")
-async def delete_collection(collection_name: str):
-    try:
-        delete_collection_impl(collection_name)
-        return {"message": f"Collection '{collection_name}' deleted successfully."}
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.delete("/collections/{collection_name}")
+# async def delete_collection(collection_name: str):
+#     try:
+#         delete_collection_impl(collection_name)
+#         return {"message": f"Collection '{collection_name}' deleted successfully."}
+#     except ValueError as e:
+#         raise HTTPException(status_code=404, detail=str(e))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/collections/{collection_name}/init", status_code=status.HTTP_202_ACCEPTED)
-async def init_collection(collection_name: str, path: str = Body(..., embed=True)):
-    job_id = str(uuid.uuid4())
-    job_status[job_id] = "pending"
-    await job_queue.put((job_id, collection_name, path))
-    return {"message": f"Job to populate '{collection_name}' queued.", "job_id": job_id}
+# @app.post("/collections/{collection_name}/init", status_code=status.HTTP_202_ACCEPTED)
+# async def init_collection(collection_name: str, path: str = Body(..., embed=True)):
+#     job_id = str(uuid.uuid4())
+#     job_status[job_id] = "pending"
+#     await job_queue.put((job_id, collection_name, path))
+#     return {"message": f"Job to populate '{collection_name}' queued.", "job_id": job_id}
 
 
-@app.get("/collections/init/status/{job_id}")
-def get_status(job_id: str):
-    return {"status": job_status.get(job_id, "unknown")}
+# @app.get("/collections/init/status/{job_id}")
+# def get_status(job_id: str):
+#     return {"status": job_status.get(job_id, "unknown")}
 
 
 @app.post(
