@@ -3,3 +3,37 @@
     margin-top: 24px;
     font-size: 18px;
 }
+
+.suggestions-row {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0 24px 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.suggestion-btn {
+  background: #24262b;
+  border: 1px solid #35373f;
+  color: #d3d3d6;
+  border-radius: 16px;
+  padding: 8px 12px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.suggestion-btn:hover {
+  background: #35373f;
+  color: #fff;
+  border-color: #4a90e2;
+}
+
+.suggestion-fade {
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.suggestion-fade.visible {
+  opacity: 1;
+}
